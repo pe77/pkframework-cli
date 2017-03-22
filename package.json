@@ -1,0 +1,34 @@
+{
+  "name": "pkframe",
+  "version": "0.0.1",
+  "description": "Client for pkframwork | Instal, webtest, auto refresh, typescript compile",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">= 0.12.0"
+  },
+  "dependencies": {
+    "commander": "^2.9.0",
+    "socket.io": "1.7.0"
+  },
+  "bin": {
+    "pkframe": "./app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pe77/pkframework-cli.git"
+  },
+  "keywords": [
+    "phaser",
+    "pkframework",
+    "client"
+  ],
+  "author": "Sr. Pikachu <qplok02@gmail.com> (https://twitter.com/henriquepikachu)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pe77/pkframework-cli/issues"
+  },
+  "homepage": "https://github.com/pe77/pkframework-cli#readme"
+}
