@@ -22,6 +22,9 @@ Basically it will download one of the [pkframework-examples](https://github.com/
 $ pkframe init
 ```
 
+![](http://i.imgur.com/7xTtaKx.png)
+-----------
+
 #### Options
 
 These are keys in the options object you can pass
@@ -40,6 +43,8 @@ This is where the magic happens.
 ```bash
 $ pkframe go
 ```
+![](http://i.imgur.com/cSLjV2R.png)
+-----------
 
 This command does many things:
 
