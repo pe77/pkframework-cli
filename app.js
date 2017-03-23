@@ -9,6 +9,7 @@ var http 		= require("http");
 var serveStatic = require('serve-static')
 var finalhandler = require('finalhandler')
 var ts 			= require('typescript');
+var tsc 		= require('typescript-compiler');
 
 var lrserver;
 var server;
@@ -57,9 +58,8 @@ function go()
 	console.log('Runnin on: ' + chalk.green(serverUrl));
 
 	// process tps
-	require('ts-node').register({
-		'project':process.cwd()
-	});
+	// tsc.compile(['a.ts'], ['-p', process.cwd(), '-w'])
+	tsc.compile(['a.ts'], '--out out.js -w')
 
 	// open browser
 	// require("openurl").open(serverUrl);

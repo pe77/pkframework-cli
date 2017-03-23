@@ -1,1 +1,1 @@
-console.log('type script ');
+console.log('type script 4');
