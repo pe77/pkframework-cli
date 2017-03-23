@@ -26,9 +26,10 @@ var indexPath = process.cwd() + '/index.html';
 
 
 commander
-.version('0.3.1')
+.version('0.7.3')
 .arguments('arg')
 // .option('-u, --username <username>', 'github username')
+.option('-p, --package <package>', 'select package to start [default=basic]')
 .action(function(command) {
 
 	if(command == 'go')
@@ -45,45 +46,69 @@ commander
 // init a new workspace
 function init()
 {
-	console.log(chalk.green('init project ...'));
+	console.log(chalk.yellow('[1/5]') + chalk.green(' init project ...'));
 
-	var zipFile = process.cwd() + "/pkframework-starter-master.zip";
-	var zipFolder = process.cwd() + "/pkframework-starter-master";
+	var package = commander.package ? commander.package : 'basic';
+	var zipFile = process.cwd() + "/pkframework-examples-master.zip";
+	var zipFolder = process.cwd() + "/pkframework-examples-master";
+	var zipFolderPack = process.cwd() + "/pkframework-examples-master/" + package;
 
 	// check if dir is empty
-	console.log(chalk.yellow('[1/3]') + chalk.green(' check folder'));
+	console.log(chalk.yellow('[2/5]') + chalk.green(' check folder...'));
 	fs.readdir(process.cwd(), function(err, files) {
 	    if (err) {
 	       console.log(chalk.red('err...'), err);
 	    } else {
-	       if (!files.length || true) {
+	       if (!files.length) {
 
-	       		console.log(chalk.yellow('[2/3]') + chalk.green(' download file'));
+	       		console.log(chalk.yellow('[3/5]') + chalk.green(' download file...'));
 
 	       		// dowload file
 				// https://github.com/pe77/pkframework-starter/archive/master.zip
-				// https://nodeload.github.com/pe77/pkframework-starter/zip/master
-				download('https://nodeload.github.com/pe77/pkframework-starter/zip/master', zipFile, err=>{
+				// https://nodeload.github.com/pe77/pkframework-examples/zip/master
+				download('https://nodeload.github.com/pe77/pkframework-examples/zip/master', zipFile, err=>{
 					if (err) return console.log(chalk.red('err...'), err);
 
-					console.log(chalk.yellow('[3/3]') + chalk.green(' extract'));
+					console.log(chalk.yellow('[4/5]') + chalk.green(' extract...'));
 
 					// extract	
 					var zip = new AdmZip(zipFile);
 					zip.extractAllTo(process.cwd(), true);
 
-					// copy and delete zip and zip-folder
-					fs.copy(zipFolder, process.cwd(), err => {
-					  if (err) return console.error(err)
-					  
 
-					  	// remove dir and zip
-						fs.remove(zipFolder);
-						fs.unlinkSync(zipFile);
+					// check if package exist
+					console.log(chalk.yellow('[5/5]') + chalk.green(' check pack...'));
+					fs.exists(zipFolderPack, function(exists) { 
+					    
+				    	// if dont exist
+				    	if (!exists) {
+				    		console.log(chalk.yellow('['+package+']')+' pack does not ' + chalk.red('exist'));
+				    		console.log('see the packages available at ['+chalk.green('https://github.com/pe77/pkframework-examples')+']');
 
-						console.log(chalk.cyan('YEAH BABY!'));
-						console.log(chalk.gray('try: ') + chalk.green.bold('pkframe go'));
-					});
+				    		// remove dir and zip
+							fs.remove(zipFolder);
+							fs.unlinkSync(zipFile);
+				    		return;
+				    	}
+
+				    	// copy and delete zip and zip-folder
+						fs.copy(zipFolderPack, process.cwd(), err => {
+						  if (err) return console.error(err)
+						  
+
+						  	// remove dir and zip
+							fs.remove(zipFolder);
+							fs.unlinkSync(zipFile);
+
+							console.log(chalk.cyan('YEAH BABY!'));
+							console.log(chalk.gray('next move: ') + chalk.green.bold('pkframe go'));
+						});
+
+					    
+					})
+
+
+					
 				});
 
 	       }else{
@@ -139,7 +164,7 @@ function go()
 
 	server.listen(port);
 
-	console.log('...starting server...');
+	console.log(chalk.yellow('[1/4]') + chalk.green(' create server on:['+port+']...'));
 
 	// whatch dirs
 	var whatchDir = process.cwd() + '/dist';
@@ -151,7 +176,7 @@ function go()
 
 	serverUrl = 'http://localhost:' + port;
 
-	console.log('server running on: ' + chalk.green(serverUrl));
+	console.log(chalk.yellow('[2/4]') + chalk.gray(' server running :['+chalk.green(serverUrl)+']...'));
 
 	var localEnvPath = __dirname + '/node_modules/.bin'
 	process.env.PATH += ';' + localEnvPath; // add local to env path
@@ -160,7 +185,7 @@ function go()
 
 
 	// -- TSC
-	console.log('...starting typescript compile whatch...');
+	console.log(chalk.yellow('[3/4]') + chalk.green(' starting typescript compile whatch...'));
 
 	var e = exec('tsc -w --noEmitHelpers', {
 		cwd : process.cwd(),
@@ -203,7 +228,7 @@ function go()
 			return;
 		}
 
-		console.log('...starting browser on index.html + liverload...');
+		console.log(chalk.yellow('[4/4]') + chalk.green(' starting browser on index.html + liverload...'));
 
 		// open browser
 		require("openurl").open(serverUrl);
@@ -213,7 +238,6 @@ function go()
 
 
 function download(url, dest, cb) {
-  
 
   var file = fs.createWriteStream(dest);
   var request = https.get(url, function(response) {
@@ -231,11 +255,13 @@ function download(url, dest, cb) {
   	response.on('data', (chunk)=> {
 	    bar.tick(chunk.length);
 	});
+	
 
 
 
     response.pipe(file);
     file.on('finish', function() {
+    	console.log(chalk.green.bold('download complete!'));
       file.close(cb);  // close() is async, call cb after close completes.
     });
   }).on('error', function(err) { // Handle errors
