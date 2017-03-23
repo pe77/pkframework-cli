@@ -1,1 +1,2 @@
-console.log('foi?');
+// Class: 
+console.log('work!!'); 

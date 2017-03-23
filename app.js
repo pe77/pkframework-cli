@@ -10,6 +10,7 @@ var serveStatic = require('serve-static')
 var finalhandler = require('finalhandler')
 var ts 			= require('typescript');
 var exec 		= require('child_process').exec;
+var fs = require('fs')
 
 var lrserver;
 var server;
@@ -17,6 +18,7 @@ var serverStatic;
 var data;
 var port = 8011;
 var serverUrl;
+var indexPath = process.cwd() + '/index.html';
 
 
 commander
@@ -34,18 +36,50 @@ commander
 // start server
 function go()
 {
+	// SERVER
 	// init liverload
 	lrserver = livereload.createServer();
 
 	// simple static server
-	serverStatic = serveStatic(process.cwd(), {'index': ['index.html', 'index.htm']})
-	var server = http.createServer(function(request, response) {
-	  serverStatic(request, response, finalhandler(request, response));
+	serverStatic = serveStatic(process.cwd(), {
+		cacheControl:false
+	})
+
+	var scriptElm = "\n<script type='text/javascript' src='http://localhost:35729/livereload.js?snipver=1'></script>\n";
+	var server = http.createServer(function(req, res) {
+		
+		var done = finalhandler(req, res);
+
+		if(req.url == '/')
+		{
+			// check if file exist
+			fs.exists(indexPath, function(exists) { 
+			  if (exists) { 
+			  	// add liver load script
+			    fs.readFile(indexPath, function (err, content) {
+					if (err) return done(err)
+
+					res.setHeader('Content-Type', 'text/html');
+					content = content.toString().replace(/(<head[^>]*>)/, "$1" + scriptElm)
+					res.write(content);
+					res.end()
+				});
+
+			  }else{
+			  	console.log(chalk.red('index.html no found!'));
+			  }
+			}); 
+
+			return;
+			
+		}
+
+	  	serverStatic(req, res, done);
 	});
 
 	server.listen(port);
 
-	console.log('starting server...');
+	console.log('...starting server...');
 
 	// whatch dirs
 	var whatchDir = process.cwd() + '/dist';
@@ -62,16 +96,33 @@ function go()
 	var localEnvPath = __dirname + '/node_modules/.bin'
 	process.env.PATH += ';' + localEnvPath; // add local to env path
 
-	console.log('starting typescript compile whatch...');
 
-	var e = exec('tsc -w', {
+
+
+	// -- TSC
+	console.log('...starting typescript compile whatch...');
+
+	var e = exec('tsc -w --noEmitHelpers', {
 		cwd : process.cwd(),
 	    env : localEnvPath
 	});
 
 	e.stdout.on('data', function(data) {
-		data = data.replace(/[\r\n]/g, '');
-	    console.log(chalk.green('code updated:') + data);
+		data = data.replace(/[\r\n]/g, ''); // remove quebra de linha
+		var colorC = chalk.green;
+
+		if(data.indexOf('error') > -1)
+			colorC = chalk.yellow;
+	    //
+
+		if(data.indexOf('File change') > -1)
+	    	console.log(colorC('file change:\t') + data);
+	    //
+
+	    if(data.indexOf('Compilation complete') > -1)
+	    	console.log(colorC('code updated:\t') + data);
+	    //
+
 	});
 	e.stderr.on('data', function(data) {
 	    console.log(chalk.red('Holy Shit! ') + data);
@@ -81,8 +132,20 @@ function go()
 	});
 
 
-	console.log('starting browser liverload...');
 
-	// open browser
-	require("openurl").open(serverUrl);
+
+	// -- LIVERLOAD
+	// if index exist
+	fs.exists(indexPath, function(exists) { 
+		if(!exists)
+		{
+			console.log(chalk.red('index.html no found!'));
+			return;
+		}
+
+		console.log('...starting browser on index.html + liverload...');
+
+		// open browser
+		require("openurl").open(serverUrl);
+	})
 }
