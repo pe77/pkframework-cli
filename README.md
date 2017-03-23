@@ -25,6 +25,7 @@ $ pkframe init
 ```
 
 ![](http://i.imgur.com/7xTtaKx.png)
+> for some reason, only the first time, a get a error but, on the second attempt works. Dont give up!
 -----------
 
 #### Options
