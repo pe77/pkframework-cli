@@ -22,7 +22,7 @@ Basically it will download one of the [pkframework-examples](https://github.com/
 $ pkframe init
 ```
 
-### Options
+#### Options
 
 These are keys in the options object you can pass
 
@@ -42,8 +42,31 @@ $ pkframe go
 ```
 
 This command does many things:
-Starts a web server to test your game.
 
+- Starts a web-server to test your game
+- Compile(and watch modifications) typescript code and deploy
+- Start your browse with liverload. Auto update whenever the code is updated
+
+This command expects to find an [index.html], where you will start your browser with liveload.
+Typescript compiler will watch for .ts files modifications except for the [assets, node_modules, vendor] folders and will deploy them to [dist / js / app.js].
+
+```
+{
+    "compilerOptions": {
+        "module": "amd",
+        "target": "es5",
+        "sourceMap": true,
+        "outFile": "dist/js/app.js"
+    },
+    "exclude": [
+        "assets",
+        "node_modules",
+        "vendor"
+    ]
+}
+```
+
+>This can be configured in the tsconfig.json file itself. All initial models already come with a tsconfig.json preconfiguration. You can change if you want.
 
 
 
