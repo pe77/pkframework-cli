@@ -1,6 +1,6 @@
 {
   "name": "pkframe",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "Client for pkframwork | Instal, webtest, auto refresh, typescript compile",
   "main": "app.js",
   "scripts": {
@@ -9,6 +9,7 @@
   "engines": {
     "node": ">= 0.12.0"
   },
+  "readmeFilename": "README.md",
   "dependencies": {
     "adm-zip": "^0.4.7",
     "chalk": "^1.1.3",
