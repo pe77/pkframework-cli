@@ -9,7 +9,7 @@ var http 		= require("http");
 var serveStatic = require('serve-static')
 var finalhandler = require('finalhandler')
 var ts 			= require('typescript');
-var tsc 		= require('typescript-compiler');
+var exec 		= require('child_process').exec;
 
 var lrserver;
 var server;
@@ -45,6 +45,8 @@ function go()
 
 	server.listen(port);
 
+	console.log('starting server...');
+
 	// whatch dirs
 	var whatchDir = process.cwd() + '/dist';
 	whatchDirs = [
@@ -55,12 +57,32 @@ function go()
 
 	serverUrl = 'http://localhost:' + port;
 
-	console.log('Runnin on: ' + chalk.green(serverUrl));
+	console.log('server running on: ' + chalk.green(serverUrl));
 
-	// process tps
-	// tsc.compile(['a.ts'], ['-p', process.cwd(), '-w'])
-	tsc.compile(['a.ts'], '--out out.js -w')
+	var localEnvPath = __dirname + '/node_modules/.bin'
+	process.env.PATH += ';' + localEnvPath; // add local to env path
+
+	console.log('starting typescript compile whatch...');
+
+	var e = exec('tsc -w', {
+		cwd : process.cwd(),
+	    env : localEnvPath
+	});
+
+	e.stdout.on('data', function(data) {
+		data = data.replace(/[\r\n]/g, '');
+	    console.log(chalk.green('code updated:') + data);
+	});
+	e.stderr.on('data', function(data) {
+	    console.log(chalk.red('Holy Shit! ') + data);
+	});
+	e.on('close', function(code) {
+	    console.log(chalk.blue('file whatch close. Bye ') + code);
+	});
+
+
+	console.log('starting browser liverload...');
 
 	// open browser
-	// require("openurl").open(serverUrl);
+	require("openurl").open(serverUrl);
 }
