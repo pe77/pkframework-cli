@@ -1,6 +1,8 @@
 # PK Frameword :: Client 
 Client for [pkframwork](https://github.com/pe77/pkframework) | install, server, liveload, typescript whatch...
 
+>First of all: Sorry for my shitty english...
+
 Installation
 ---------------
 
