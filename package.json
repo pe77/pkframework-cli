@@ -1,6 +1,6 @@
 {
   "name": "pkframe",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "Client for pkframwork | Instal, webtest, auto refresh, typescript compile",
   "main": "app.js",
   "scripts": {

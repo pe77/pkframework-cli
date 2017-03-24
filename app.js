@@ -26,7 +26,7 @@ var indexPath = process.cwd() + '/index.html';
 
 
 commander
-.version('0.7.4')
+.version('0.8.0')
 .arguments('arg')
 // .option('-u, --username <username>', 'github username')
 .option('-p, --package <package>', 'select package to start [default=basic]')
