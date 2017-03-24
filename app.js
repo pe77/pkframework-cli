@@ -5,7 +5,7 @@ var commander 	= require('commander');
 var chalk 		= require('chalk');
 var livereload 	= require('livereload');
 var http 		= require("http");
-var https 		= require("https");
+var https 		= require("follow-redirects").https;
 var serveStatic = require('serve-static')
 var finalhandler = require('finalhandler')
 var ts 			= require('typescript');
@@ -40,8 +40,155 @@ commander
 		init();
 	//
 
+	if(command == 'install')
+		install();
+	//
+
 })
 .parse(process.argv);
+
+// install dependencies
+function install()
+{
+	console.log(chalk.yellow('[1/5]') + chalk.green(' init install ...'));
+
+	// check if exist pkconfig.json
+	var pkconfigFullPath = process.cwd() +  '/pkconfig.json';
+	fs.exists(pkconfigFullPath, function(exists) { 
+
+		var readConfig = function()
+		{
+			// read config file
+			console.log(chalk.yellow('[3/5]') + chalk.green(' load config ...'));
+			fs.readFile(pkconfigFullPath, 'utf8', function (err,data) {
+			  if (err) return console.log(chalk.red('err...'), err);
+
+
+			  downloadDependencies(JSON.parse(data))
+			});
+		}
+		
+		console.log(chalk.yellow('[2/5]') + chalk.green(' check pkconfig file exists['+exists+'] ...'));
+		if(!exists)
+		{
+			generateDefaultConfig(pkconfigFullPath, readConfig);
+		}
+		else
+		{
+			readConfig();
+		}
+	});
+}
+
+function downloadDependencies(config)
+{
+	console.log(chalk.yellow('[4/5]') + chalk.green(' download assets ...'));
+
+	var assetsZipFile = process.cwd() +  '/assets.zip';
+	download(config.install.assets.url, assetsZipFile, err=>{
+		if (err) return console.log(chalk.red('err...'), err);
+
+		// extract	
+		var zip = new AdmZip(assetsZipFile);
+		var zipEntries = zip.getEntries();
+
+		var extractEntryFolder = ''
+		if(config.install.assets.url.indexOf('github') > -1)
+			extractEntryFolder = zipEntries[0]["entryName"];
+		//
+
+		zip.extractEntryTo(extractEntryFolder, process.cwd() +  '/assets', false, true);
+
+		// remove zip 
+		fs.unlinkSync(assetsZipFile);
+
+		var totalDependencies = Object.keys(config.install.dependencies).length;
+		var depCount = 1;
+
+		if(totalDependencies)
+			console.log(chalk.yellow('[5/5]') + chalk.green(' download dependencies ...'));
+		else
+			console.log(chalk.yellow('[5/5]') + chalk.green(' no dependencies ...'));
+		//
+		
+
+		for (let depName in config.install.dependencies)
+		{	
+			let depPathLocation = process.cwd() +  '/'+depName;
+			let depZipLocation = depPathLocation+'.zip';
+
+			console.log(chalk.gray('- [1/3] ['+chalk.cyan(depName)+']') + chalk.green(' download :'+chalk.gray(config.install.dependencies[depName].url)));
+
+			download(config.install.dependencies[depName].url, depZipLocation, err=>{
+				if (err) return console.log(chalk.red('err...'), err);
+
+				var zip = new AdmZip(depZipLocation);
+				var zipEntries = zip.getEntries();
+
+				console.log(chalk.gray('- [2/3] ['+chalk.cyan(depName)+']') + chalk.green(' extract...'));
+
+				// if need extract main folder ({project-main}/{important_things})
+				var extractEntryFolder = ''
+				if(config.install.dependencies[depName].url.indexOf('github') > -1)
+					extractEntryFolder = zipEntries[0]["entryName"];
+				//
+
+				if(config.install.dependencies[depName].use)
+					extractEntryFolder+= config.install.dependencies[depName].use;
+				//
+
+				zip.extractEntryTo(extractEntryFolder, process.cwd() +  '/vendor/' + depName, false, true);
+				
+				fs.unlinkSync(depZipLocation);
+
+				console.log(chalk.gray('- [3/3] ['+chalk.cyan(depName)+']') + chalk.green.bold(' ok!'));
+
+				if(depCount == totalDependencies)
+				{
+					console.log(chalk.cyan('All dependencies install!'));
+					console.log(chalk.gray('next move: ') + chalk.green.bold('pkframe go'));
+				}
+
+				depCount++;
+			});
+
+			
+		}
+		return;
+		
+		
+	});
+}
+
+function generateDefaultConfig(pkconfigFullPath, callBack)
+{
+	console.log(chalk.yellow('[2/5]') + chalk.green(' generate default pkconfig file ...'));
+	// create default one
+	var options = {
+		install:{
+			assets:{
+				url:"https://github.com/pe77/pkframework-assets/archive/master.zip",
+				folder:"assets"
+			},
+			dependencies:{
+				pkframework:{
+					url:"https://github.com/pe77/pkframework/archive/master.zip",
+					use:'build/'
+				}
+			}
+		}
+	};
+
+	JSON.stringify(options);
+
+	fs.writeFile(pkconfigFullPath, JSON.stringify(options, null, 4), function(err) {
+	    if (err) return console.log(chalk.red('err...'), err);
+
+	    if(callBack)
+	    	callBack();
+	    //
+	}); 
+}
 
 // init a new workspace
 function init()
@@ -100,8 +247,10 @@ function init()
 							fs.remove(zipFolder);
 							fs.unlinkSync(zipFile);
 
-							console.log(chalk.cyan('YEAH BABY!'));
-							console.log(chalk.gray('next move: ') + chalk.green.bold('pkframe go'));
+							console.log(chalk.cyan('-----------'));
+
+							// install dependencies
+							install();
 						});
 
 					    
@@ -242,26 +391,25 @@ function download(url, dest, cb) {
   var file = fs.createWriteStream(dest);
   var request = https.get(url, function(response) {
 
-  	
   	var len = parseInt(response.headers['content-length'], 10);
 
-  	var bar = new ProgressBar(chalk.green('downloading') + chalk.gray('[:bar]') +' :percent :etas', {
-	    complete: '=',
-	    incomplete: ' ',
-	    width: 20,
-	    total: len
-	  });
+  	if(len)
+  	{
+	  	var bar = new ProgressBar(chalk.green('downloading') + chalk.gray('[:bar]') +' :percent :etas', {
+		    complete: '=',
+		    incomplete: ' ',
+		    width: 20,
+		    total: len
+		  });
 
-  	response.on('data', (chunk)=> {
-	    bar.tick(chunk.length);
-	});
+	  	response.on('data', (chunk)=> {
+		    bar.tick(chunk.length);
+		});
+  	}
 	
-
-
-
     response.pipe(file);
     file.on('finish', function() {
-    	console.log(chalk.green.bold('download complete!'));
+    	// console.log(chalk.green.bold('complete!'));
       file.close(cb);  // close() is async, call cb after close completes.
     });
   }).on('error', function(err) { // Handle errors
