@@ -76,7 +76,7 @@ Typescript compiler will watch for .ts files modifications except for the [asset
 Here it will download / install the dependencies listed in the configuration file [**pkconfig.json**]. Things like assests pack, ts and js lib.
 
 ```bash
-$ pkframe isntall
+$ pkframe install
 ```
 If there is no configuration file, it will create a default.
 
