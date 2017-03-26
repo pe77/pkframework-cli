@@ -3,6 +3,8 @@ Client for [pkframwork](https://github.com/pe77/pkframework) | install, server, 
 
 >First of all: Sorry for my shitty english...
 
+Here are just client tool usage. To learn more about framework: [Quick Start Guide](https://github.com/pe77/pkframework/wiki)
+
 Installation
 ---------------
 
